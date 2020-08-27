@@ -20,11 +20,12 @@ A special characteristic of this project is that it deals with Big Data - the fu
 
 ## Repository Structure / Files <a name="files"></a>
 
-<!--- The `data` folder comprises:
-  * The messages and categories datasets
-  * A draft jupyter notebook used for data preparation and exploratory analysis
-  * The process_data.py script, used to prepare data for analysis and application presentation
-  * The database file where data is stored for both training step and application data presentation -->
+The `data` folder comprises:
+  * The small dataset in compressed format
+  
+In the root folder, it is possible to find two jupyter notebooks (one for each analysis):
+  * Sparkify.ipynb - analysis on small subset of data
+  * Sparkify-AWS.ipynb - analysis on full dataset
   
 <!--- The `models` folder comprises:
   * A draft jupyter notebook used for feature set/model building and analysis
