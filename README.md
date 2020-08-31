@@ -10,19 +10,22 @@
 
 ## Motivation<a name="motivation"></a>
 
-As part of the activities of Udacity's Data Science Nanodegree I'm enrolled, I created this project, which aims at developing a Customer Churn Predictor using logs data from a fake Music streaming service named Sparkify - any resemblance to reality is purely coincidental XD 
+As part of the activities of Udacity's Data Science Nanodegree I'm enrolled, I developed this project, which aims at developing a Customer Churn Predictor using logs data from a fake Music streaming service named Sparkify - any resemblance to reality is purely coincidental XD 
 
-<!--The idea is that, at the occasion of a disaster (natural / human / machine caused), many messages are collected by the government authorities and they have to select which messages are important (related to the disaster), and have to group them into buckets by subject so it can be passed on to the right entities for providing help. -->
+The idea of the project is to train a prediction ML model to anticipate the churning of users from the system, where churning can be defined as either downgrading from paid to free service tier or cancelling the service altogether. As client churning leads to a decrease in a company's revenue, it is very important to be able to predict when users are likely to churn in order to try avoiding it by offering them discounts or bonuses.
 
-<!-- In this project, I use a dataset comprised of messages sent in a context of disaster with their respective categories to train a classifier which will be able to determine the category of a fresh message, helping disaster monitoring organizations. The data was gently provided by [Figure8](https://www.linkedin.com/company/figure8app/), now part of [Appen](https://appen.com/). -->
+A special characteristic of this project is that it deals with Big Data - the full dataset of the Streaming Service logs is around 12GB. Therefore, it creates a challenge which has to be dealt with using Big Data technologies/frameworks. In this case, I used the Python implementation of Apache Spark. The project analysis was conducted in two steps:
+ - An analysis on a small subset of Sparkify's logs (~130MB) - conducted on Udacity's website embedded workspace
+ - An analysis on the full dataset - conducted using AWS's EMR and S3 services.
 
 ## Repository Structure / Files <a name="files"></a>
 
-<!--- The `data` folder comprises:
-  * The messages and categories datasets
-  * A draft jupyter notebook used for data preparation and exploratory analysis
-  * The process_data.py script, used to prepare data for analysis and application presentation
-  * The database file where data is stored for both training step and application data presentation -->
+The `data` folder comprises:
+  * The small dataset in compressed format
+  
+In the root folder, it is possible to find two jupyter notebooks (one for each analysis):
+  * Sparkify.ipynb - analysis on small subset of data
+  * Sparkify-AWS.ipynb - analysis on full dataset
   
 <!--- The `models` folder comprises:
   * A draft jupyter notebook used for feature set/model building and analysis
