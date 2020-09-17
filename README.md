@@ -130,6 +130,14 @@ However, if we consider only the result on the test set, we will notice the unde
 
 Looking more carefully, if we consider the context of the problem which we are aiming to solve, the undersampled data model might not be performing so bad. It correctly targets most of the churning users at the expense of incorrectly targetting a lot of non-churning users as churning.
 
+Below, we see the evaluation of the best model on the validation dataset.
+
+<p align="center">
+  <img width="600" height="400" src="assets/best-model-val-set.png">
+</p>
+
+The Undersampled data model, when evaluated on the held-out validation dataset, behaves in a similar way as in the test set, being able to target most future churning users while misclassifying a lot of non-churning users.
+
 ### Conclusions
 
 1 - The dataset is highly imbalanced, as expected, and so it was a good opportunity to learn and exploit techniques to deal with this sort of problem, which is so common in real settings
@@ -137,7 +145,7 @@ Looking more carefully, if we consider the context of the problem which we are a
 3 - The final f-1 score is low for the best model, but we need to consider the problem context and its singularities. Only the business team can draw the line on how much they are willing to spend to keep their users from churning. 
 4 - Maybe this problem could even be split into two: 1) predict whether a paid user will downgrade, and 2) predict whether a free user will cancel the service; and the company could choose to treat those two cases differently (with different actions as well as risk taking thresholds).
 
-A more detailed description of the project, its analyses and insights can be found in the Medium post available [here]().
+A more detailed description of the project, its analyses and insights can be found in the Medium post available [here](https://medium.com/@tarcisocomp/please-dont-leave-9ad8ed0d1a25).
 
 ### Dependencies
 
