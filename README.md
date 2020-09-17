@@ -6,7 +6,7 @@
 2. [Repository Structure / Files](#files)
 3. [Exploratory Data Analysis](#eda)
 4. [Feature Engineering](#feat_engineering)
-5. [Model Training](#model_training)
+5. [Model Training and Evaluation](#model_training)
 6. [Licensing, Authors, and Acknowledgements](#licensing)
 
 ## Motivation<a name="motivation"></a>
@@ -34,113 +34,124 @@ The `drafts` folder comprises:
   
 In the root folder, it is possible to find a jupyter notebooks, namely Sparkify.ipynb, which contains the code, results and discussion of the whole analysis performed on the small subset of the Sparkify data. This analysis ran on Udacity's workspace.
 
-## Model Training<a name="model_training"></a>
+## Exploratory Data Analysis<a name="eda"></a>
+
+As with every piece of data which is to be analyzed, it is imperative to perform some exploration on it, aiming to understand its essence and get insights for the analysis. Here, I present some exploratory questions I've answered with the data:
+
+- Who are the top-10 Artists overall?
+
+<p align="center">
+  <img width="600" height="400" src="assets/top-10-artists.png">
+</p>
+
+- Which are the top-10 songs overall?
+
+<p align="center">
+  <img width="600" height="400" src="assets/top-10-songs.png">
+</p>
+
+- How is the distribution of listening time for paid versus free users?
+
+<p align="center">
+  <img width="600" height="400" src="assets/list-time-paid-free-users.png">
+</p>
+
+- How is the distribution of the average number of songs listened along the hours of the day for paid versus free versus all users?
+
+<p align="center">
+  <img width="600" height="400" src="assets/avg-num-songs-per-hour.png">
+</p>
+
+## Feature Engineering<a name="feat_engineering"></a>
+
+### Churning Definition
+
+As suggested by the project description, churning can be defined/identified by either of two events:
+- Cancellation: can happen for both paid and free users - when they access the Cancellation Confirmation page in the application
+- Downgrading: when a paid user accesses the Submit Downgrading webpage and changes their level from paid to free afterwards
+
+### Temporal Perspective
+
+The temporal perspective should ALWAYS be considered when doing Data Science. However, in some contexts like the one of this project, it plays a fundamental role.
+Here we have to answer two key question which will directly impact our analysis:
+
+1 - When and How often do we want to predict churning?
+
+In the case of this experiment, given the context, I chose to run the prediction at the beginning of every day for all users, and be able to act on a day range
+
+2 - How early do we want ot be able to predict churning?
+
+For the Sparkify project, I chose to use a 7-day anticipation window, to have one week to take actions in order to convince the user not to leave.
 
 ### Features
 
+First of all, let us define that a row of our train / test / validation dataset is identified by user and a day.
+
 In order to develop the classification model, I invested some time brainstorming and computing features from the log data:
+I chose a few basic data-ready features: region and gender. 
+I also computed a few temporal features: 
+- median listening time
+- number of accesses to cancel/download page
+- number of accesses to thumbs up minus accesses to thumbs down
+- number of logins minus logouts.
+
+Each of the above temporal features was computed using a sliding window for a few time range periods: the previous 1, 3, 7, and 14 days before the prediction date.
+The response variable was computed, as defined earlier, as, for a given user and day, whether or not the user will churn in the next 7 days.
+
+## Model Training and Evaluation<a name="model_training"></a>
+
+### Handling Class Imbalance
+
+The dataset is highly imbalanced as the number of churning user-day combinations found in the data represents only a small proportion (~1.7%) of the whole dataset. Thus, we need to be mindful of that when splitting our dataset into train / test / validation sets to have a similar representation of both classes in all sets, and in the model evaluation to stop the model from learning to just predict the major class for all cases as the error will be low.
+
+In order to correctly split data, I applied a stratified split to keep the same class proportion in the subsets as in the original dataset.
+
+Dealing with imbalanced datasets in the model evaluation is a bit more complex, and there are a number of techniques available. I tested some, namely: Undersampling and Class Weights.
+
+I applied both techniques, fitted models for them and evaluated their results, which are described in the next sessions. For the evaluation, as suggested in the project description, I used F-1 measure to balance between precision and recall due to class imbalance.
+
+### Model Selection and Hyperparameter Tuning
+
+I chose to fit a few models, namely: Logistic Regression, Random Forest and Support Vector Classifiers. In order to run the model selection and hyperparameter tuning, I've used Spark pipelines with K-Fold Cross Validation using a Binary Classification Evaluator with the areaUnderPR (area under Precision-Recall curve) metric, which is a good metric for imbalanced datasets, as is the case.
  
- <!--- Local Word2Vec model
-   * [Widely known NLP model](https://en.wikipedia.org/wiki/Word2vec) used to generate word embeddings whose idea is to position the text words in a vector space such that words with similar meaning are close to each other, and words with opposite meaning are away from each other.
-   * This model was trained locally, using the [Gensim library](https://radimrehurek.com/gensim/).
-   * In this project, I use the trained model to extract the vectors for each token in the message text and then aggregate the vectors using a custom TF-IDF aggregator.
- - Pre-trained Glove model
-   * [Glove](https://nlp.stanford.edu/projects/glove/) is another strategy to generate word embeddings developed by Stanford researchers. They provide a set of pre-trained models (trained on corpus with billions of words) with different vector sizes.
-   * In this project, just like with the Word2Vec model, I use the pre-trained Glove model to extract the vectors for each token in the message text and then aggregate the vectors using a custom TF-IDF aggregator.
- - Doc2Vec
-   * [Doc2Vec](https://radimrehurek.com/gensim/models/doc2vec.html) is an NLP model which follows the same idea of Word2Vec, but instead of mapping words to feature vectors, maps whole documents to feature vectors.
-   * This model was trained locally, using the [Gensim library](https://radimrehurek.com/gensim/).
-   * As the model generates one feature vector per message, there was no need to aggregate the vectors as I did for the previous features.
- - Category Similarity
-   * This is a custom feature thought for this specific project, whose idea is to take advantage of the supervised characteristic of the problem, by comparing the messages feature vectors to the categories names feature vectors, computing the cosine distance between them. I suspect that messages whose words are close to their categories words should have a short distance to them.
-   * The format of this feature is a vector of size num_categories with the cosine distance between the message and each category.
- - All Features
-   * All the above feature sets together (concatenated) -->
- 
-### Classifiers
-
- <!--- Naive Bayes - Baseline classifier used to test the pipeline execution
- - Logistic Regression - Linear Classifier with good results on NLP tasks
- - Random Forest - Widely used Ensemble Classifier with good results on NLP tasks -->
- 
-### Feature/Model Evaluation and Selection
-
-In order to select the best feature set and model to use in our classifier, I've used the following approach:
-
-<!--1. Run a Grid Search for each individual Feature Set varying the size of the feature vector using Random Forest and Logistic Regression models with fixed (average) parameters. -->
-
-<!--2. Run a second Grid Search for the All Features set using the best params from each feature set obtained from the previous grid search using Random Forest and Logistic Regression models with fixed (average) parameters. -->
-
-<!--3. Run a third Grid Search using the feature set and model with best performance from the above two grid searches, having fixed the feature set best parameters, but now using a grid to search the model hyperparameters. -->
-
-<!--4. Save the best model obtained from this third Grid Search to be used by the web application. -->
-
 ### Results
 
-<!--The table below shows the Top-5 FeatureSet-Model combinations according to their score on the test set.
+For each model-hyperparameter combination, I computed the accuracy, precision, recall and f-1 score on both the train and test set. 
 
-<!--| Feature Set                    | Model                                                          | Test Score (F1-Score) |
-| ------------------------------ | -------------------------------------------------------------- | --------------------- |
-| TF-IDF Local W2V (num_dims=300)| RandomForest(n_estimators=50,max_depth=100,min_num_samples=5)  | 0.474161              |
-| TF-IDF Local W2V (num_dims=300)| RandomForest(n_estimators=100,max_depth=100,min_num_samples=5) | 0.471549              |
-| TF-IDF Local W2V (num_dims=100)| RandomForest(n_estimators=50,max_depth=100,min_num_samples=5)  | 0.470284              |
-| All Features with Best Params  | RandomForest(n_estimators=50,max_depth=100,min_num_samples=5)  | 0.470169              |
-| TF-IDF Local W2V (num_dims=300)| RandomForest(n_estimators=50,max_depth=100,min_num_samples=5)  | 0.469709              | -->
+The table below describes the overall result (notice: u_cv - undersampled cross-validated model, w_cv - class weights cross-validated model, cv_model - naive original cross-validated model):
 
-<!--As we can see, the TF-IDF aggregated Local Word2Vec outweights all others, making 4 of the top-5. In addition, all Top-5 pipelines use RandomForest as the classifier model. The best pipeline uses a feature vector with 300 dimensions and 50 trees (estimators) in the Random Forest. -->
+<p align="center">
+  <img width="400" height="250" src="assets/models-overall-evaluation.png">
+</p>
 
-<!--The final test score is not high (below 50%), but we have to take into consideration the high complexity of the problem (multilabel classification), the large number of classes and the small number of samples in the dataset, which contributed greatly towards this result. Besides, I did not have a more robust infrastructure to test a wider range of grid params for the feature sets and models. -->
+We can see in the above table that the overall top-performing model based on the f-1 score is the Class Weights model. Its performance on the train set achieves the highest f-1 score.
 
-<!--Notice: the F1-Score was computed by applying micro-averaging accross all the classes, accounting for class imbalance, as literature suggests. -->
+However, if we consider only the result on the test set, we will notice the undersampled data model is superior. Not only that but if we also consider the recall metric we will see that this model beats all others, as it is able to target the majority of soon-to-churn users.
 
-## Considerations on Big Data<a name="considerations_bigdata"></a>
+Looking more carefully, if we consider the context of the problem which we are aiming to solve, the undersampled data model might not be performing so bad. It correctly targets most of the churning users at the expense of incorrectly targetting a lot of non-churning users as churning.
+
+### Conclusions
+
+1 - The dataset is highly imbalanced, as expected, and so it was a good opportunity to learn and exploit techniques to deal with this sort of problem, which is so common in real settings
+2 - The temporal perspective is very key for a good understanding of this problem as well as a good solution design and implementation, and thus it was very beneficial for me as a Data Scientist to be challenged to think more carefully using this mindset.
+3 - The final f-1 score is low for the best model, but we need to consider the problem context and its singularities. Only the business team can draw the line on how much they are willing to spend to keep their users from churning. 
+4 - Maybe this problem could even be split into two: 1) predict whether a paid user will downgrade, and 2) predict whether a free user will cancel the service; and the company could choose to treat those two cases differently (with different actions as well as risk taking thresholds).
+
+A more detailed description of the project, its analyses and insights can be found in the Medium post available [here]().
 
 ### Dependencies
 
-<!--The project needs a few extra libraries which don't come along with Anaconda 3's default package:
-- Gensim
-- dill
-- plotly -->
-
-<!--In order to faccilitate the reproduction of the results, I've added to the repository a requirements.txt file with all the packages (and their respective versions) I used in the conda environment I created locally for this project. -->
-
-<!--1. The code assumes you use Anaconda (Python 3). Use the requirements.txt file at the repo root folder to recreate the conda environment with the needed libraries: `conda create --name <env_name> --file requirements.txt`.-->
-
-<!--2. Download the [pre-trained Glove models](https://drive.google.com/file/d/1XGzkIEgx6Y2IjzVYGDvn_shd77d_ZKki/view?usp=sharing) if you want to train models with Glove feature vectors. Unzip it into a local folder and set the `glove_models_folderpath` config in the train config file.-->
-
-<!--3. Run the following commands to prepare the data and model for application:
-
-    - To activate the Anaconda environment created above, run the following command in the root folder:
-    
-        `conda activate <env_name>`
-        
-    - To run ETL pipeline that cleans data and stores in database, run the following command in the `data` folder:
-    
-        `python process_data.py disaster_messages.csv disaster_categories.csv DisasterResponse.db`
-        
-    - To run ML pipeline that trains classifier and saves, run the following command in the `models` folder:
-    
-        `python train_classifier.py configs/train_config_best_model.json 0`
-        
-    - To generate the wordclouds for the application, run the following command in the `apps` folder:
-    
-        `python generate-ngrams-wordclouds.py ../data/DisasterResponse.db static/imgs/`
-
-<!--4. Run the following command in the app's directory to run your web app.
-    `python run.py`
-
-<!--5. Go to http://0.0.0.0:3001/ to access the application.
+The project only needs PySpark installed and the default libraries which come with Anaconda 3 package.
 
 
 ## Licensing, Authors, Acknowledgements<a name="licensing"></a>
 
-<!--In order to achieve the results presented in this project, I've read many articles of specialists/enthusiasts in the field of NLP to get insights and learn how to deal with the problems I've faced along the way. Below, I cite some of them:
+In order to achieve the results presented in this project, I've read many articles, tutorials and documentation from specialists/enthusiasts in the field of Distributed Processing, more specifically Spark, as well as in the subject of Imbalance Dataset handling to get insights on how to deal with the problems I've faced while analyzing the data. Below, I cite some of them:
 
-<!--- [A Comprehensive Guide to Understand and Implement Text Classification in Python](https://www.analyticsvidhya.com/blog/2018/04/a-comprehensive-guide-to-understand-and-implement-text-classification-in-python/)
-- [Managing Machine Learning Workflows with Scikit-learn Pipelines Part 3: Multiple Models, Pipelines, and Grid Searches](https://www.kdnuggets.com/2018/01/managing-machine-learning-workflows-scikit-learn-pipelines-part-3.html)
-- [Deep dive into multi-label classification..! (With detailed Case Study)](https://towardsdatascience.com/journey-to-the-center-of-multi-label-classification-384c40229bff)
-- [How to Build a Reusable Custom NLP Pipeline with Scikit-Learn](https://towardsdatascience.com/how-to-build-a-reusable-nlp-code-pipeline-with-scikit-learn-with-an-emphasis-on-feature-504f8aa14699)
-- [[NLP] Performance of Different Word Embeddings on Text Classification](https://towardsdatascience.com/nlp-performance-of-different-word-embeddings-on-text-classification-de648c6262b)
-- [Multi-Class Text Classification Model Comparison and Selection](https://towardsdatascience.com/multi-class-text-classification-model-comparison-and-selection-5eb066197568)
+- [Using Spark's ML library for Machine Learning](https://github.com/dsharpc/dsharpc.github.io/blob/master/SparkMLFlights/README.md)
+- [Class Imbalance in Credit Card Fraud Detection - Part 3 : Undersampling in Spark](http://blog.madhukaraphatak.com/class-imbalance-part-3/)
+- [Oversampling and Undersampling with PySpark | by Jun Wan](https://medium.com/@junwan01/oversampling-and-undersampling-with-pyspark-5dbc25cdf253)
+- [Balancing Model Weights in PySpark](https://danvatterott.com/blog/2019/11/18/balancing-model-weights-in-pyspark/)
+- [Spark ML Documentation](https://spark.apache.org/docs/2.4.3/api/python/pyspark.ml.html#)
 
 Feel free to use the code provided that you give credits / cite this repo, as well as to contribute.
