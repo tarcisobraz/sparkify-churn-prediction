@@ -121,7 +121,7 @@ For each model-hyperparameter combination, I computed the accuracy, precision, r
 The table below describes the overall result (notice: u_cv - undersampled cross-validated model, w_cv - class weights cross-validated model, cv_model - naive original cross-validated model):
 
 <p align="center">
-  <img width="400" height="250" src="assets/models-overall-evaluation.png">
+  <img width="400" height="150" src="assets/models-overall-evaluation.png">
 </p>
 
 We can see in the above table that the overall top-performing model based on the f-1 score is the Class Weights model. Its performance on the train set achieves the highest f-1 score.
@@ -133,7 +133,7 @@ Looking more carefully, if we consider the context of the problem which we are a
 Below, we see the evaluation of the best model on the validation dataset.
 
 <p align="center">
-  <img width="600" height="400" src="assets/best-model-val-set.png">
+  <img width="400" height="200" src="assets/best-model-val-set.png">
 </p>
 
 The Undersampled data model, when evaluated on the held-out validation dataset, behaves in a similar way as in the test set, being able to target most future churning users while misclassifying a lot of non-churning users.
